@@ -1,25 +1,167 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>Mi Rutina</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#00c853">
+<meta charset="UTF-8">
+<title>Mi Rutina Fitness</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#00c853">
+
+<style>
+body {
+  background: #000;
+  color: #fff;
+  font-family: Arial;
+  text-align: center;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 28px;
+}
+
+p {
+  font-size: 20px;
+}
+
+button {
+  font-size: 18px;
+  padding: 15px;
+  margin: 10px;
+  border-radius: 10px;
+  border: none;
+}
+
+#completar {
+  background: #00c853;
+  color: white;
+}
+
+#voz {
+  background: #2962ff;
+  color: white;
+}
+
+#timer {
+  font-size: 24px;
+  margin-top: 20px;
+}
+</style>
 </head>
 
-<body style="background:black; color:white; text-align:center;">
+<body>
 
 <h1 id="ejercicio"></h1>
 <p id="detalle"></p>
 
-<button onclick="completar()">Completar</button>
+<button id="completar" onclick="completar()">✅ Completar</button>
+<button id="voz" onclick="iniciarVoz()">🎤 Activar voz</button>
+
+<div id="timer"></div>
 
 <script>
-let ejercicios = [
-  { nombre: "Sentadillas", detalle: "3 x 12" },
-  { nombre: "Plancha", detalle: "30 seg" }
+
+// 🏋️ RUTINA
+const ejercicios = [
+  { nombre: "Calentamiento: Caminata", detalle: "5 minutos", descanso: 10 },
+
+  { nombre: "Sentadillas con mancuernas", detalle: "3 x 12", descanso: 30 },
+  { nombre: "Press de pecho", detalle: "3 x 12", descanso: 30 },
+  { nombre: "Remo con mancuernas", detalle: "3 x 12", descanso: 30 },
+
+  { nombre: "Plancha", detalle: "30 segundos", descanso: 20 },
+  { nombre: "Crunch abdominal", detalle: "3 x 15", descanso: 20 }
 ];
 
 let i = 0;
 
+// 🔊 VOZ
+function hablar(texto) {
+  const msg = new SpeechSynthesisUtterance(texto);
+  msg.lang = "es-ES";
+  speechSynthesis.speak(msg);
+}
+
+// 📺 MOSTRAR EJERCICIO
 function mostrar() {
-  document.getElementById
+  document.getElementById("ejercicio").innerText = ejercicios[i].nombre;
+  document.getElementById("detalle").innerText = ejercicios[i].detalle;
+
+  hablar("Siguiente ejercicio: " + ejercicios[i].nombre);
+}
+
+// ✅ COMPLETAR EJERCICIO
+function completar() {
+  hablar("Ejercicio completado");
+
+  iniciarDescanso(ejercicios[i].descanso);
+
+  i++;
+
+  setTimeout(() => {
+    if (i < ejercicios.length) {
+      mostrar();
+    } else {
+      hablar("Rutina terminada. Buen trabajo");
+      document.getElementById("ejercicio").innerText = "🎉 Rutina terminada";
+      document.getElementById("detalle").innerText = "";
+    }
+  }, ejercicios[i-1].descanso * 1000);
+}
+
+// ⏱️ TEMPORIZADOR
+function iniciarDescanso(segundos) {
+  let tiempo = segundos;
+  const timer = document.getElementById("timer");
+
+  timer.innerText = "Descanso: " + tiempo + "s";
+
+  const intervalo = setInterval(() => {
+    tiempo--;
+    timer.innerText = "Descanso: " + tiempo + "s";
+
+    if (tiempo <= 0) {
+      clearInterval(intervalo);
+      timer.innerText = "";
+      hablar("Descanso terminado");
+    }
+  }, 1000);
+}
+
+// 🎤 CONTROL POR VOZ
+function iniciarVoz() {
+  try {
+    const recognition = new webkitSpeechRecognition();
+    recognition.lang = "es-ES";
+
+    hablar("Escuchando");
+
+    recognition.onresult = function(event) {
+      const comando = event.results[0][0].transcript.toLowerCase();
+
+      if (comando.includes("completar")) {
+        completar();
+      }
+
+      if (comando.includes("siguiente")) {
+        completar();
+      }
+
+      if (comando.includes("terminé")) {
+        completar();
+      }
+    };
+
+    recognition.start();
+
+  } catch (e) {
+    alert("Tu navegador no soporta control por voz");
+  }
+}
+
+// 🚀 INICIO
+mostrar();
+
+</script>
+
+</body>
+</html>
